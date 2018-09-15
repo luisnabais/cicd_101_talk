@@ -57,7 +57,7 @@ node {
         
         docker.withServer("${docker_host}") {
             try {
-                sh "docker run -tdi --name ${container_name} -p 8888:80 ${container_name}:${website_version}"
+                sh "docker run -tdi --name ${container_name} --network proxy -p 8888:80 ${container_name}:${website_version}"
                 updateGitlabCommitStatus name: 'Deploy', state: 'success'
             }
             catch (Exception ex) {
@@ -73,7 +73,7 @@ node {
         sh "echo 'Tests'"
         try {
             sh "sleep 10" // Make sure container is fully up
-            sh "curl \$(docker container inspect --format '{{.NetworkSettings.Networks.bridge.IPAddress }}' ${container_name})"
+            sh "curl ${container_name})"
             updateGitlabCommitStatus name: 'Tests', state: 'success'
         }
         catch (Exception ex) {
