@@ -1,4 +1,4 @@
-container_name = 'ln_basic_website'
+container_name = 'ln_basic_website_tests'
 docker_host = 'unix:///var/run/docker.sock'
 website_version = 'NA'
 
@@ -20,8 +20,8 @@ node {
         deleteDir() //clean workspace to garantee always a clean build - this will force a git clone, instead of pull, which can be slower
     }
     
-    stage('Checkout') { // for display purposes
-        git url: "https://gitlab.com/luisnabais_talks/cicd_101_talk.git"
+    stage('Checkout') {
+        git branch: 'dev', url: 'https://gitlab.com/luisnabais_talks/cicd_101_talk.git'
 
         updateGitlabCommitStatus name: 'Checkout', state: 'success'
     }
@@ -32,8 +32,6 @@ node {
    
     stage('Build') {
         sh "echo 'Build'"
-        
-        // TODO: Build docker container
 
         try {
             website_version = readFile "code/docker/website/VERSION"
@@ -53,11 +51,13 @@ node {
     
     stage('Deploy') {
         sh "echo 'Deploy'"
-        // Start Docker container for testing
         
         docker.withServer("${docker_host}") {
             try {
-                sh "docker run -tdi --name ${container_name} --network proxy -p 8888:80 ${container_name}:${website_version}"
+                sh "docker run -tdi --name ${container_name} \
+                    --network proxy -p 8888:80 \
+                    ${container_name}:${website_version}"
+
                 updateGitlabCommitStatus name: 'Deploy', state: 'success'
             }
             catch (Exception ex) {
@@ -73,7 +73,8 @@ node {
         sh "echo 'Tests'"
         try {
             sh "sleep 10" // Make sure container is fully up
-            sh "curl ${container_name}"
+            sh "curl ${container_name}" //Simple test - check if webpage opens
+
             updateGitlabCommitStatus name: 'Tests', state: 'success'
         }
         catch (Exception ex) {
