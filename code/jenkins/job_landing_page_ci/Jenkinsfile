@@ -1,4 +1,4 @@
-container_name = 'tests_'
+container_name = 'ln_basic_website'
 docker_host = 'unix:///var/run/docker.sock'
 website_version = 'NA'
 
