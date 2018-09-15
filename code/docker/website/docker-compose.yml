@@ -1,4 +1,0 @@
-web:
-  image: my-nginx:1.15.3
-  ports:
-   - "80:80"

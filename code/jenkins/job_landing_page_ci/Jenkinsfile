@@ -1,5 +1,6 @@
 container_name = 'tests_'
 docker_host = 'unix:///var/run/docker.sock'
+website_version = 'NA'
 
 
 def dockerCleanup() {
@@ -10,7 +11,7 @@ def dockerCleanup() {
 }
 
 def slack_error(stage) {
-    slackSend color: 'danger', message: "Pipeline failed at stage ${stage}.\n"
+    slackSend color: 'danger', message: "Pipeline for Findmore CI/CD Demo failed at stage ${stage}."
 }
 
 
@@ -31,17 +32,24 @@ node {
    
     stage('Build') {
 	        sh "echo 'Build'"
-            // Build docker container
+            
+            // TODO: Build docker container
 
 	        try {
+                website_version = readFile "code/docker/website/VERSION"
+                
+                docker.withServer("${docker_host}") {
+                    sh "docker build -t ${container_name}:${website_version} code/docker/website"
+                }
+            try {
 	            
 	            updateGitlabCommitStatus name: 'Build', state: 'success'
 	        }
 	        catch (Exception ex) {
 	            updateGitlabCommitStatus name: 'Build', state: 'failed'
-	            //slack_error('Deploy')
+	            slack_error('Build')
 	            dockerCleanup()
-                error('Error on stage Build')
+                error('Error on stage Build.')
 	        }
 	    }
     }
@@ -52,12 +60,12 @@ node {
         
         docker.withServer("${docker_host}") {
             try {
-                docker.image("ln-nginx").run("--name ${container_name}")
+                sh "docker run -tdi --name ${container_name} -p 8888:80 ${container_name}:${website_version}"
                 updateGitlabCommitStatus name: 'Deploy', state: 'success'
             }
             catch (Exception ex) {
 	            updateGitlabCommitStatus name: 'Deploy', state: 'failed'
-	            //slack_error('Deploy')
+	            slack_error('Deploy')
 	            dockerCleanup()
                 error('Error on stage Deploy')
 	        }
@@ -66,14 +74,23 @@ node {
    
     stage('Tests') {
         sh "echo 'Tests'"
+        try {
+            sh "sleep 10" // Make sure container is fully up
+            sh "curl \$(docker container inspect --format '{{.NetworkSettings.Networks.proxy.IPAddress }}' ${container_name})"
+            updateGitlabCommitStatus name: 'Tests', state: 'success'
+        }
+        catch (Exception ex) {
+            updateGitlabCommitStatus name: 'Tests', state: 'failed'
+            slack_error('Tests')
+            dockerCleanup()
+            error('Error on stage Deploy')
+        }
 
-        sh "sleep 10" // Make sure container is fully up
-        sh "curl \$(docker container inspect --format '{{.NetworkSettings.Networks.proxy.IPAddress }}' ${container_name})"
-        updateGitlabCommitStatus name: 'Tests', state: 'success'
+
     }
     
     stage('Post Build') {
         dockerCleanup()
-        //slackSend color: 'good', message: "Pipeline completed successfuly."
+        slackSend color: 'good', message: "Pipeline for Findmore CI/CD Demo completed successfuly."
     }
 }
