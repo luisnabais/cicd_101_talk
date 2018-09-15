@@ -73,7 +73,7 @@ node {
         sh "echo 'Tests'"
         try {
             sh "sleep 10" // Make sure container is fully up
-            sh "curl ${container_name})"
+            sh "curl ${container_name}"
             updateGitlabCommitStatus name: 'Tests', state: 'success'
         }
         catch (Exception ex) {
