@@ -41,8 +41,6 @@ node {
                 docker.withServer("${docker_host}") {
                     sh "docker build -t ${container_name}:${website_version} code/docker/website"
                 }
-            try {
-	            
 	            updateGitlabCommitStatus name: 'Build', state: 'success'
 	        }
 	        catch (Exception ex) {
