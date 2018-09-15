@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  gogs:
+    image: '${IMAGE_NAME}:${IMAGE_VERSION}'
+    restart: always
+    container_name: '${CONTAINER_NAME}'
+    ports:
+      - '3000'
+    volumes:
+      - 'gogs-data:/data'
+    labels:
+      - "traefik.web.port=3000"
+      - "traefik.web.frontend.rule=Host:git"
+      - "traefik.web.frontend.entryPoints=http"
+
+volumes:
+  gogs-data:
+
+networks:
+  default:
+    external:
+      name: proxy
