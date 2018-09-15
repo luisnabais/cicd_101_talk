@@ -31,25 +31,24 @@ node {
    }
    
     stage('Build') {
-	        sh "echo 'Build'"
-            
-            // TODO: Build docker container
+        sh "echo 'Build'"
+        
+        // TODO: Build docker container
 
-	        try {
-                website_version = readFile "code/docker/website/VERSION"
-                
-                docker.withServer("${docker_host}") {
-                    sh "docker build -t ${container_name}:${website_version} code/docker/website"
-                }
-	            updateGitlabCommitStatus name: 'Build', state: 'success'
-	        }
-	        catch (Exception ex) {
-	            updateGitlabCommitStatus name: 'Build', state: 'failed'
-	            slack_error('Build')
-	            dockerCleanup()
-                error('Error on stage Build.')
-	        }
-	    }
+        try {
+            website_version = readFile "code/docker/website/VERSION"
+            
+            docker.withServer("${docker_host}") {
+                sh "docker build -t ${container_name}:${website_version} code/docker/website"
+            }
+            updateGitlabCommitStatus name: 'Build', state: 'success'
+        }
+        catch (Exception ex) {
+            updateGitlabCommitStatus name: 'Build', state: 'failed'
+            slack_error('Build')
+            dockerCleanup()
+            error('Error on stage Build.')
+        }
     }
     
     stage('Deploy') {
@@ -83,8 +82,6 @@ node {
             dockerCleanup()
             error('Error on stage Deploy')
         }
-
-
     }
     
     stage('Post Build') {
