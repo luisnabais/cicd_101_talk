@@ -1,0 +1,79 @@
+container_name = 'tests_'
+docker_host = 'unix:///var/run/docker.sock'
+
+
+def dockerCleanup() {
+    docker.withServer("${docker_host}") {
+        sh "docker stop ${container_name} || true"
+        sh "docker rm ${container_name} || true"
+    }
+}
+
+def slack_error(stage) {
+    slackSend color: 'danger', message: "Pipeline failed at stage ${stage}.\n"
+}
+
+
+node {
+    stage('Preparation') {
+        deleteDir() //clean workspace to garantee always a clean build - this will force a git clone, instead of pull, which can be slower
+    }
+    
+    stage('Checkout') { // for display purposes
+        git url: "https://gitlab.com/luisnabais_talks/cicd_101_talk.git"
+
+        updateGitlabCommitStatus name: 'Checkout', state: 'success'
+    }
+
+   stage('Unit Tests') {
+       sh "echo 'TODO: Unit Tests'"
+   }
+   
+    stage('Build') {
+	        sh "echo 'Build'"
+            // Build docker container
+
+	        try {
+	            
+	            updateGitlabCommitStatus name: 'Build', state: 'success'
+	        }
+	        catch (Exception ex) {
+	            updateGitlabCommitStatus name: 'Build', state: 'failed'
+	            //slack_error('Deploy')
+	            dockerCleanup()
+                error('Error on stage Build')
+	        }
+	    }
+    }
+    
+    stage('Deploy') {
+        sh "echo 'Deploy'"
+        // Start Docker container for testing
+        
+        docker.withServer("${docker_host}") {
+            try {
+                docker.image("ln-nginx").run("--name ${container_name}")
+                updateGitlabCommitStatus name: 'Deploy', state: 'success'
+            }
+            catch (Exception ex) {
+	            updateGitlabCommitStatus name: 'Deploy', state: 'failed'
+	            //slack_error('Deploy')
+	            dockerCleanup()
+                error('Error on stage Deploy')
+	        }
+        }
+    }
+   
+    stage('Tests') {
+        sh "echo 'Tests'"
+
+        sh "sleep 10" // Make sure container is fully up
+        sh "curl \$(docker container inspect --format '{{.NetworkSettings.Networks.proxy.IPAddress }}' ${container_name})"
+        updateGitlabCommitStatus name: 'Tests', state: 'success'
+    }
+    
+    stage('Post Build') {
+        dockerCleanup()
+        //slackSend color: 'good', message: "Pipeline completed successfuly."
+    }
+}
