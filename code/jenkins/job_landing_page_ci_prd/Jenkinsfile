@@ -34,8 +34,8 @@ node {
         
         docker.withServer("${docker_host}") {
             try {
-                sh "docker image tag ${ln_basic_website}:${website_version} ${registry}/${ln_basic_website}:${website_version}"
-                sh "docker image push ${registry}/${ln_basic_website}:${website_version}"
+                sh "docker image tag ${container_name}:${website_version} ${registry}/${container_name}:${website_version}"
+                sh "docker image push ${registry}/${container_name}:${website_version}"
             }
             catch (Exception ex) {
 	            updateGitlabCommitStatus name: 'Push', state: 'failed'
