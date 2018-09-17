@@ -1,2 +1,2 @@
-# Findmore Talks
-## CI/CD - A modern approach to Software Deployment
+# cicd_101_talk
+
