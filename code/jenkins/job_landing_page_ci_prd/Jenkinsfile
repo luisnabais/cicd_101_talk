@@ -24,7 +24,7 @@ node {
     }
 
     stage('Checkout') {
-        git branch: 'dev', url: 'https://gitlab.com/luisnabais_talks/cicd_101_talk.git'
+        git url: 'https://gitlab.com/luisnabais_talks/cicd_101_talk.git'
 
         updateGitlabCommitStatus name: 'Checkout', state: 'success'
     }
