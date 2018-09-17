@@ -1,3 +1,4 @@
+image_name = 'ln_basic_website'
 container_name = 'ln_basic_website_prd'
 docker_host = 'unix:///var/run/docker.sock'
 website_version = 'NA'
@@ -39,7 +40,7 @@ node {
                     --label traefik.web.port=80 \
                     --label traefik.web.frontend.rule=Host:findmore-demo.luisnabais.com \
                     --label traefik.web.frontend.entryPoints=http,https \
-                    ${container_name}:${website_version}"
+                    ${image_name}:${website_version}"
 
                 updateGitlabCommitStatus name: 'Deploy', state: 'success'
             }
