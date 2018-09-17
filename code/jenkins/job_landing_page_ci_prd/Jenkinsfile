@@ -51,6 +51,8 @@ node {
         
         docker.withServer("${docker_host}") {
             try {
+                dockerCleanup() //make sure no container is already running
+                
                 sh "docker run -tdi --name ${container_name} \
                     --network proxy \
                     --label traefik.web.port=80 \
