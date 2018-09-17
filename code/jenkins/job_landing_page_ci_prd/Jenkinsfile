@@ -2,6 +2,7 @@ image_name = 'ln_basic_website'
 container_name = 'ln_basic_website_prd'
 docker_host = 'unix:///var/run/docker.sock'
 website_version = 'NA'
+registry = 'cloud.canister.io:5000/luisnabais'
 
 
 def dockerCleanup() {
@@ -22,16 +23,31 @@ node {
 
     }
 
-     stage('Checkout') {
+    stage('Checkout') {
         git branch: 'dev', url: 'https://gitlab.com/luisnabais_talks/cicd_101_talk.git'
 
         updateGitlabCommitStatus name: 'Checkout', state: 'success'
     }
     
+    stage('Push') {
+        website_version = readFile "code/docker/website/VERSION"
+        
+        docker.withServer("${docker_host}") {
+            try {
+                sh "docker image tag ${ln_basic_website}:${website_version} ${registry}/${ln_basic_website}:${website_version}"
+                sh "docker image push ${registry}/${ln_basic_website}:${website_version}"
+            }
+            catch (Exception ex) {
+	            updateGitlabCommitStatus name: 'Push', state: 'failed'
+	            slack_error('Push')
+                error('Error on stage Push')
+	        }
+        }
+        
+    }
+    
     stage('Deploy') {
         sh "echo 'Deploy'"
-
-        website_version = readFile "code/docker/website/VERSION"
         
         docker.withServer("${docker_host}") {
             try {
