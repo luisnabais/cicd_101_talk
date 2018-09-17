@@ -61,9 +61,9 @@ node {
                 updateGitlabCommitStatus name: 'Deploy', state: 'success'
             }
             catch (Exception ex) {
-	            updateGitlabCommitStatus name: 'Deploy', state: 'failed'
-	            slack_error('Deploy')
-	            dockerCleanup()
+                updateGitlabCommitStatus name: 'Deploy', state: 'failed'
+                slack_error('Deploy')
+                dockerCleanup()
                 error('Error on stage Deploy')
 	        }
         }
